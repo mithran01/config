@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  nginx:
+    image: nginx-ingress:0.1
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ingress
+    secrets:
+      - mitz27.club.key
+      - mitz27.club.crt
+    environment:
+      PROXY_MODE: ssl-term-bridg
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == manager]
+
+# sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./certs/my-service.key -out ./certs/my-service.crt
+# docker secret create my-service.company.tld.key my-service.key
+# docker secret create my-service.company.tld.crt my-service.crt
+secrets:
+  mitz27.club.key:
+    external: true
+  mitz27.club.crt:
+    external: true
+
+# docker network create --driver overlay ingress-routing
+networks:
+  ingress:
+    external: true
+    name: ingress-routing

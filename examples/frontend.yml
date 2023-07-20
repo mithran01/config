@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+
+  nginx:
+    image: nginx-frontend:0.3
+    networks:
+      - ingress
+    configs:
+      - source: nginx_options 
+        target: /etc/nginx/options-ssl-nginx.conf
+      - source: nginx_dhparams
+        target: /etc/nginx/ssl-dhparams.pem
+          #    secrets:
+          # - nginx_key
+          # - nginx_cert
+    deploy:
+      replicas: 1 
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+# Self-signed cert
+# mkdir certs && sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./certs/nginx.key -out ./certs/nginx.crt
+# cd certs
+# docker secret create nginx_cert nginx.crt
+# docker secret create nginx_key nginx.key
+
+secrets:
+  nginx_key:
+    external: true
+  nginx_cert:
+    external: true
+
+configs:
+  nginx_options:
+    file: ./nginx-ssl/options-ssl-nginx.conf
+  nginx_dhparams:
+    file: ./nginx-ssl/ssl-dhparams.pem
+
+networks:
+  ingress:
+    external: true
+    name: ingress-routing

@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+
+  openemr:
+    image: mithrandocker/oemr:0.0.9
+    networks:
+      - ingress
+#   hostname: backend_openemr
+    ports:
+      - 8061:80
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      labels:
+        #ingress.host: dev.vozo.xyz
+        ingress.path: /customapi
+          #ingress.virtual_proto: http
+#
+#
+networks:
+  ingress:
+    external: true
+    name: ingress-routing
